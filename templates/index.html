@@ -3,74 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conectar à Sala</title>
+    <title>Login</title>
 </head>
 <body>
-    <h1>Jogo de Conexão de Sala</h1>
-
-    <div id="create-section">
-        <h2>Criar uma Sala</h2>
-        <button onclick="createRoom()">Criar Sala</button>
-        <p id="room-code"></p>
-    </div>
-
-    <div id="join-section">
-        <h2>Entrar em uma Sala</h2>
-        <input type="text" id="join-room-code" placeholder="Digite o código da sala" />
-        <button onclick="joinRoom()">Entrar na Sala</button>
-        <p id="join-status"></p>
-    </div>
-
-    <div id="game-status" style="display: none;">
-        <h2>Jogadores Conectados:</h2>
-        <ul id="players-list"></ul>
-        <p>A partida está pronta para começar!</p>
-    </div>
-
-    <script>
-        function createRoom() {
-            fetch('/create_room', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('room-code').innerText = `Código da Sala: ${data.room_code}`;
-            })
-            .catch(error => console.error('Erro ao criar a sala:', error));
-        }
-
-        function joinRoom() {
-            const roomCode = document.getElementById('join-room-code').value;
-
-            fetch('/join_room', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ room_code: roomCode })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const joinStatus = document.getElementById('join-status');
-                
-                if (data.status === 'ready') {
-                    joinStatus.innerText = 'Ambos os jogadores estão na sala. Pronto para começar!';
-                    document.getElementById('game-status').style.display = 'block';
-                    const playersList = document.getElementById('players-list');
-                    playersList.innerHTML = '';
-                    data.players.forEach(player => {
-                        const li = document.createElement('li');
-                        li.textContent = player;
-                        playersList.appendChild(li);
-                    });
-                } else if (data.status === 'waiting') {
-                    joinStatus.innerText = 'Você entrou na sala, aguardando outro jogador...';
-                } else {
-                    joinStatus.innerText = 'Código de sala inválido ou sala já está cheia.';
-                }
-            })
-            .catch(error => console.error('Erro ao entrar na sala:', error));
-        }
-    </script>
+    <h2>Login</h2>
+    <form action="/login" method="post">
+        <label for="nome">Nome:</label>
+        <input type="nome" id="nome" name="nome" required>
+        <br><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <br><br>
+        <label for="senha">Senha:</label>
+        <input type="password" id="senha" name="senha" required>
+        <br><br>
+        <button type="submit">Entrar</button>
+    </form>
 </body>
 </html>

@@ -1,36 +1,38 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-import random
+import requests
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-# Dicionário para armazenar as salas e os jogadores conectados
-rooms = {}
+# URL da API externa para validação do login
+API_URL = 'https://projetoa3-glitch.glitch.me/api/jogador/'
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('login.html')
 
-@app.route('/create_room', methods=['POST'])
-def create_room():
-    # Gera um código de sala aleatório de 3 dígitos
-    room_code = str(random.randint(100, 999))
-    rooms[room_code] = {"players": []}
-    return jsonify({"room_code": room_code})
+@app.route('/login', methods=['POST'])
+def login():
+    nome = request.form['nome']
+    email = request.form['email']
+    senha = request.form['senha']
 
-@app.route('/join_room', methods=['POST'])
-def join_room():
-    room_code = request.json.get('room_code')
-
-    # Verifica se a sala existe e se não está cheia
-    if room_code in rooms and len(rooms[room_code]["players"]) < 2:
-        rooms[room_code]["players"].append(f"Player {len(rooms[room_code]['players']) + 1}")
-        
-        # Verifica se a sala está cheia
-        if len(rooms[room_code]["players"]) == 2:
-            return jsonify({"status": "ready", "players": rooms[room_code]["players"]})
-        return jsonify({"status": "waiting"})
-    
-    return jsonify({"status": "full_or_invalid"})
+    # Fazendo o request para a API externa
+    try:
+        response = requests.get(API_URL + email)
+        # Verifica se a resposta da API foi bem-sucedida (status code 200)
+        if response.status_code == 404:
+            response = requests.post(API_URL, json={"nome": nome, "email": email, "senha": senha})
+            if response.status_code == 200:
+                data = response.json()
+                # Supondo que a API retorna um campo 'valid' que indica se as credenciais são válidas
+                if data.get('valid'):
+                    return render_template('home.html', email=email)
+                else:
+                    return render_template('error.html', message=data.get('message', 'Email ou senha incorretos.'))
+            else:
+                return render_template('error.html', message='Erro ao se comunicar com a API. Tente novamente mais tarde.')
+    except requests.exceptions.RequestException as e:
+        return render_template('error.html', message=f'Erro de conexão: {str(e)}')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True)
